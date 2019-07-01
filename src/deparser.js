@@ -648,9 +648,7 @@ export default class Deparser {
       output.push(`USING (${using})`);
     }
 
-    const wrapped =
-      (node.rarg.JoinExpr != null) || node.alias ? '(' + output.join(' ') + ')'
-        : output.join(' ');
+    const wrapped = (node.rarg.JoinExpr != null) || node.alias ? '(' + output.join(' ') + ')' : output.join(' ');
 
     if (node.alias) {
       return wrapped + ' ' + this.deparse(node.alias);
@@ -1017,6 +1015,19 @@ export default class Deparser {
 
     if (node.selectStmt) {
       output.push(this.deparse(node.selectStmt));
+    }
+
+    return output.join(' ');
+  }
+
+  ['ConstraintStmt'](node) {
+    const output = [];
+    const constraint = CONSTRAINT_TYPES[node.contype];
+
+    if (node.conname) {
+      output.push(`CONSTRAINT ${node.conname} ${constraint}`);
+    } else {
+      output.push(constraint);
     }
 
     return output.join(' ');

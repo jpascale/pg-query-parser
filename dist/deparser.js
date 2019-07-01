@@ -1035,6 +1035,19 @@ class Deparser {
     return output.join(' ');
   }
 
+  ['ConstraintStmt'](node) {
+    const output = [];
+    const constraint = CONSTRAINT_TYPES[node.contype];
+
+    if (node.conname) {
+      output.push(`CONSTRAINT ${node.conname} ${constraint}`);
+    } else {
+      output.push(constraint);
+    }
+
+    return output.join(' ');
+  }
+
   ['SortBy'](node) {
     const output = [];
 
