@@ -1010,6 +1010,14 @@ class Deparser {
     return output.join(' ');
   }
 
+  ['ExplainStmt'](node) {
+    console.log(node);
+    const output = [];
+    output.push('EXPLAIN');
+    output.push(this.deparse(node.query));
+    return output.join(' ');
+  }
+
   ['SortBy'](node) {
     const output = [];
 
