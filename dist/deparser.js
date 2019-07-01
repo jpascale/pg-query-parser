@@ -14,6 +14,8 @@ var _util = require('util');
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+const CONSTRAINT_TYPES = ['NULL', 'NOT NULL', 'DEFAULT', 'CHECK', 'PRIMARY KEY', 'UNIQUE', 'EXCLUDE', 'REFERENCES'];
+
 const keys = _lodash2.default.keys;
 
 
@@ -994,6 +996,17 @@ class Deparser {
       });
     }
 
+    return output.join(' ');
+  }
+
+  ['CreateStmt'](node) {
+    const output = [];
+    output.push('CREATE TABLE');
+    output.push(this.deparse(node.relation));
+    output.push('(');
+    output.push(this.list(node.tableElts));
+    output.push(')');
+    output.push(';');
     return output.join(' ');
   }
 

@@ -1,6 +1,17 @@
 import _ from 'lodash';
 import { format } from 'util';
 
+const CONSTRAINT_TYPES = [
+  'NULL',
+  'NOT NULL',
+  'DEFAULT',
+  'CHECK',
+  'PRIMARY KEY',
+  'UNIQUE',
+  'EXCLUDE',
+  'REFERENCES'
+];
+
 const { keys } = _;
 
 const compact = o => {
@@ -113,7 +124,7 @@ export default class Deparser {
   }
 
   type(names, args) {
-    const [ catalog, type ] = names.map(name => this.deparse(name));
+    const [catalog, type] = names.map(name => this.deparse(name));
 
     const mods = (name, size) => {
       if (size != null) {
@@ -240,8 +251,8 @@ export default class Deparser {
           output.push(format('SIMILAR TO %s', this.deparse(node.rexpr.FuncCall.args[0])));
         } else {
           output.push(format('SIMILAR TO %s ESCAPE %s',
-                             this.deparse(node.rexpr.FuncCall.args[0]),
-                             this.deparse(node.rexpr.FuncCall.args[1])));
+            this.deparse(node.rexpr.FuncCall.args[0]),
+            this.deparse(node.rexpr.FuncCall.args[1])));
         }
 
         return output.join(' ');
@@ -264,7 +275,7 @@ export default class Deparser {
   ['Alias'](node, context) {
     const name = node.aliasname;
 
-    const output = [ 'AS' ];
+    const output = ['AS'];
 
     if (node.colnames) {
       output.push(name + parens(this.list(node.colnames)));
@@ -296,7 +307,7 @@ export default class Deparser {
   }
 
   ['A_Indirection'](node) {
-    const output = [ `(${this.deparse(node.arg)})` ];
+    const output = [`(${this.deparse(node.arg)})`];
 
     // TODO(zhm) figure out the actual rules for when a '.' is needed
     //
@@ -362,7 +373,7 @@ export default class Deparser {
   }
 
   ['CaseExpr'](node) {
-    const output = [ 'CASE' ];
+    const output = ['CASE'];
 
     if (node.arg) {
       output.push(this.deparse(node.arg));
@@ -403,7 +414,7 @@ export default class Deparser {
   }
 
   ['ColumnDef'](node) {
-    const output = [ this.quote(node.colname) ];
+    const output = [this.quote(node.colname)];
 
     output.push(this.deparse(node.typeName));
 
@@ -639,7 +650,7 @@ export default class Deparser {
 
     const wrapped =
       (node.rarg.JoinExpr != null) || node.alias ? '(' + output.join(' ') + ')'
-                                                 : output.join(' ');
+        : output.join(' ');
 
     if (node.alias) {
       return wrapped + ' ' + this.deparse(node.alias);
@@ -698,7 +709,7 @@ export default class Deparser {
   }
 
   ['NullTest'](node) {
-    const output = [ this.deparse(node.arg) ];
+    const output = [this.deparse(node.arg)];
 
     if (node.nulltesttype === 0) {
       output.push('IS NULL');
@@ -711,7 +722,7 @@ export default class Deparser {
 
   ['ParamRef'](node) {
     if (node.number >= 0) {
-      return [ '$', node.number ].join('');
+      return ['$', node.number].join('');
     }
     return '?';
   }
@@ -727,7 +738,7 @@ export default class Deparser {
 
     for (let i = 0; i < node.functions.length; i++) {
       const funcCall = node.functions[i];
-      const call = [ this.deparse(funcCall[0]) ];
+      const call = [this.deparse(funcCall[0])];
 
       if (funcCall[1] && funcCall[1].length) {
         call.push(format('AS (%s)', this.list(funcCall[1])));
@@ -830,9 +841,9 @@ export default class Deparser {
 
   ['ResTarget'](node, context) {
     if (context === 'select') {
-      return compact([ this.deparse(node.val), this.quote(node.name) ]).join(' AS ');
+      return compact([this.deparse(node.val), this.quote(node.name)]).join(' AS ');
     } else if (context === 'update') {
-      return compact([ node.name, this.deparse(node.val) ]).join(' = ');
+      return compact([node.name, this.deparse(node.val)]).join(' = ');
     } else if (!(node.val != null)) {
       return this.quote(node.name);
     }
@@ -975,6 +986,17 @@ export default class Deparser {
     return output.join(' ');
   }
 
+  ['CreateStmt'](node) {
+    const output = [];
+    output.push('CREATE TABLE');
+    output.push(this.deparse(node.relation));
+    output.push('(');
+    output.push(this.list(node.tableElts));
+    output.push(')');
+    output.push(';');
+    return output.join(' ');
+  }
+
   ['SortBy'](node) {
     const output = [];
 
@@ -1024,8 +1046,8 @@ export default class Deparser {
       case node.subLinkType === 5:
         // TODO(zhm) what is this?
         return fail('SubLink', node);
-        // MULTIEXPR_SUBLINK
-        // format('(%s)', @deparse(node.subselect))
+      // MULTIEXPR_SUBLINK
+      // format('(%s)', @deparse(node.subselect))
       case node.subLinkType === 6:
         return format('ARRAY (%s)', this.deparse(node.subselect));
       default:
@@ -1070,7 +1092,7 @@ export default class Deparser {
   }
 
   ['CaseWhen'](node) {
-    const output = [ 'WHEN' ];
+    const output = ['WHEN'];
 
     output.push(this.deparse(node.expr));
     output.push('THEN');
@@ -1091,8 +1113,8 @@ export default class Deparser {
       }[node.name];
 
       return format('SET %s %s',
-                    name,
-                    this.deparseNodes(node.args, 'simple').join(', '));
+        name,
+        this.deparseNodes(node.args, 'simple').join(', '));
     }
 
     if (node.kind === 1) {
@@ -1100,9 +1122,9 @@ export default class Deparser {
     }
 
     return format('SET %s%s = %s',
-                  node.is_local ? 'LOCAL ' : '',
-                  node.name,
-                  this.deparseNodes(node.args, 'simple').join(', '));
+      node.is_local ? 'LOCAL ' : '',
+      node.name,
+      this.deparseNodes(node.args, 'simple').join(', '));
   }
 
   ['VariableShowStmt'](node) {
@@ -1131,7 +1153,7 @@ export default class Deparser {
     let useParens = false;
 
     if (node.partitionClause) {
-      const partition = [ 'PARTITION BY' ];
+      const partition = ['PARTITION BY'];
 
       const clause = node.partitionClause.map(item => this.deparse(item));
 
@@ -1166,7 +1188,7 @@ export default class Deparser {
   }
 
   ['WithClause'](node) {
-    const output = [ 'WITH' ];
+    const output = ['WITH'];
 
     if (node.recursive) {
       output.push('RECURSIVE');
@@ -1265,7 +1287,7 @@ export default class Deparser {
   }
 
   deparseInterval(node) {
-    const type = [ 'interval' ];
+    const type = ['interval'];
 
     if (node.arrayBounds != null) {
       type.push('[]');
@@ -1278,7 +1300,7 @@ export default class Deparser {
 
       // SELECT interval(0) '1 day 01:23:45.6789'
       if (node.typmods[0] && node.typmods[0].A_Const && node.typmods[0].A_Const.val.Integer.ival === 32767 && node.typmods[1] && (node.typmods[1].A_Const != null)) {
-        intervals = [ `(${node.typmods[1].A_Const.val.Integer.ival})` ];
+        intervals = [`(${node.typmods[1].A_Const.val.Integer.ival})`];
       } else {
         intervals = intervals.map(part => {
           if (part === 'second' && typmods.length === 2) {
@@ -1337,19 +1359,19 @@ export default class Deparser {
 
     if (this.INTERVALS == null) {
       this.INTERVALS = {};
-      this.INTERVALS[(1 << this.BITS.YEAR)] = [ 'year' ];
-      this.INTERVALS[(1 << this.BITS.MONTH)] = [ 'month' ];
-      this.INTERVALS[(1 << this.BITS.DAY)] = [ 'day' ];
-      this.INTERVALS[(1 << this.BITS.HOUR)] = [ 'hour' ];
-      this.INTERVALS[(1 << this.BITS.MINUTE)] = [ 'minute' ];
-      this.INTERVALS[(1 << this.BITS.SECOND)] = [ 'second' ];
-      this.INTERVALS[(1 << this.BITS.YEAR | 1 << this.BITS.MONTH)] = [ 'year', 'month' ];
-      this.INTERVALS[(1 << this.BITS.DAY | 1 << this.BITS.HOUR)] = [ 'day', 'hour' ];
-      this.INTERVALS[(1 << this.BITS.DAY | 1 << this.BITS.HOUR | 1 << this.BITS.MINUTE)] = [ 'day', 'minute' ];
-      this.INTERVALS[(1 << this.BITS.DAY | 1 << this.BITS.HOUR | 1 << this.BITS.MINUTE | 1 << this.BITS.SECOND)] = [ 'day', 'second' ];
-      this.INTERVALS[(1 << this.BITS.HOUR | 1 << this.BITS.MINUTE)] = [ 'hour', 'minute' ];
-      this.INTERVALS[(1 << this.BITS.HOUR | 1 << this.BITS.MINUTE | 1 << this.BITS.SECOND)] = [ 'hour', 'second' ];
-      this.INTERVALS[(1 << this.BITS.MINUTE | 1 << this.BITS.SECOND)] = [ 'minute', 'second' ];
+      this.INTERVALS[(1 << this.BITS.YEAR)] = ['year'];
+      this.INTERVALS[(1 << this.BITS.MONTH)] = ['month'];
+      this.INTERVALS[(1 << this.BITS.DAY)] = ['day'];
+      this.INTERVALS[(1 << this.BITS.HOUR)] = ['hour'];
+      this.INTERVALS[(1 << this.BITS.MINUTE)] = ['minute'];
+      this.INTERVALS[(1 << this.BITS.SECOND)] = ['second'];
+      this.INTERVALS[(1 << this.BITS.YEAR | 1 << this.BITS.MONTH)] = ['year', 'month'];
+      this.INTERVALS[(1 << this.BITS.DAY | 1 << this.BITS.HOUR)] = ['day', 'hour'];
+      this.INTERVALS[(1 << this.BITS.DAY | 1 << this.BITS.HOUR | 1 << this.BITS.MINUTE)] = ['day', 'minute'];
+      this.INTERVALS[(1 << this.BITS.DAY | 1 << this.BITS.HOUR | 1 << this.BITS.MINUTE | 1 << this.BITS.SECOND)] = ['day', 'second'];
+      this.INTERVALS[(1 << this.BITS.HOUR | 1 << this.BITS.MINUTE)] = ['hour', 'minute'];
+      this.INTERVALS[(1 << this.BITS.HOUR | 1 << this.BITS.MINUTE | 1 << this.BITS.SECOND)] = ['hour', 'second'];
+      this.INTERVALS[(1 << this.BITS.MINUTE | 1 << this.BITS.SECOND)] = ['minute', 'second'];
 
       // utils/timestamp.h
       // #define INTERVAL_FULL_RANGE (0x7FFF)
