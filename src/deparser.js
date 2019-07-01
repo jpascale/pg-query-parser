@@ -998,10 +998,27 @@ export default class Deparser {
   }
 
   ['ExplainStmt'](node) {
-    console.log(node);
     const output = [];
     output.push('EXPLAIN');
     output.push(this.deparse(node.query))
+    return output.join(' ');
+  }
+
+  ['InsertStmt'](node) {
+    const output = [];
+    output.push('INSERT INTO');
+    output.push(this.deparse(node.relation));
+
+    if (node.cols) {
+      output.push('(');
+      output.push(this.list(node.cols));
+      output.push(')')
+    }
+
+    if (node.selectStmt) {
+      output.push(this.deparse(node.selectStmt));
+    }
+
     return output.join(' ');
   }
 
