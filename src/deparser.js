@@ -1037,6 +1037,26 @@ export default class Deparser {
     return output.join(' ');
   }
 
+  ['DropStmt'](node) {
+    const output = [];
+    output.push('DROP TABLE');
+
+    if (node.missing_ok) {
+      output.push('IF EXISTS');
+    }
+    console.log(node);
+
+    output.push(node.objects.map(a => this.deparse(a[0])).map(this.quote).join(', '));
+
+    if (node.behavior === 1) {
+      output.push('CASCADE');
+    } else {
+      output.push('RESTRICT')
+    }
+
+    return output.join(' ');
+  }
+
   ['IndexElem'](node) {
     return node.name;
   }
