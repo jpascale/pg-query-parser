@@ -1057,6 +1057,11 @@ export default class Deparser {
     return output.join(' ');
   }
 
+  ['DropdbStmt'](node) {
+    console.log(node);
+    return ['DROP DATABASE', node.dbname].join(' ');
+  }
+
   ['IndexElem'](node) {
     return node.name;
   }
