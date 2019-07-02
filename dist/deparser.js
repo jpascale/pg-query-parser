@@ -1035,6 +1035,27 @@ class Deparser {
     return output.join(' ');
   }
 
+  ['IndexStmt'](node) {
+    const output = [];
+    output.push('CREATE INDEX');
+    output.push(node.idxname);
+    output.push('ON');
+    output.push(this.deparse(node.relation));
+    output.push('(');
+    output.push(this.list(node.indexParams));
+    output.push(')');
+
+    if (node.whereClause) {
+      output.push('WHERE');
+      output.push(this.deparse(node.whereClause));
+    }
+    return output.join(' ');
+  }
+
+  ['IndexElem'](node) {
+    return node.name;
+  }
+
   ['ConstraintStmt'](node) {
     const output = [];
     const constraint = CONSTRAINT_TYPES[node.contype];
