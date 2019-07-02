@@ -1059,7 +1059,6 @@ class Deparser {
     if (node.missing_ok) {
       output.push('IF EXISTS');
     }
-    console.log(node);
 
     output.push(node.objects.map(a => this.deparse(a[0])).map(this.quote).join(', '));
 
@@ -1067,6 +1066,21 @@ class Deparser {
       output.push('CASCADE');
     } else {
       output.push('RESTRICT');
+    }
+
+    return output.join(' ');
+  }
+
+  ['DeleteStmt'](node) {
+    const output = [];
+    output.push('DELETE');
+    output.push('FROM');
+
+    output.push(this.deparse(node.relation));
+
+    if (node.whereClause) {
+      output.push('WHERE');
+      output.push(this.deparse(node.whereClause));
     }
 
     return output.join(' ');
